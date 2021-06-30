@@ -1,0 +1,1 @@
+python test.py -m lanegcn --weight=/home/johnny/github/LaneGCN/36.000.ckpt --split=test
