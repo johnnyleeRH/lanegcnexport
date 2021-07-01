@@ -21,6 +21,23 @@ def gpu(data):
         data = data.contiguous().cuda(non_blocking=True)
     return data
 
+def CustomIndexAdd(A, index, B):
+    beg = 0
+    end = 0
+    indexlist = index.tolist()
+    indexcontainer = []
+    for i in indexlist:
+        end = end + 1
+        if i in indexcontainer:
+            indexcontainer.clear()
+            indexcontainer.append(i)
+            A[index[beg:end-1]] = A[index[beg:end-1]].add(B[beg:end-1])
+            beg = end - 1                                           
+        else:
+            indexcontainer.append(i)
+    if beg < end:
+        A[index[beg:end]] = A[index[beg:end]].add(B[beg:end])
+
 
 class Net(nn.Module):
     def __init__(self):
@@ -28,38 +45,28 @@ class Net(nn.Module):
         
 
     def forward(self,  index,  A, B):
-        # D = A.clone()
-        A.index_put_((index,), B, accumulate=True)
-        return A
-        # A = A.index_put_((index,),B,accumulate=True)
-        # return A
-        # uniq, inverse_indices = torch.unique(index, sorted=True, return_inverse=True)
-        # print(uniq)
-        # print(inverse_indices)
-        # print(index)
-        # print(uniq)
-        '''
-        count = 0
-        for i in index:
-            A.index_put_((i.unsqueeze(0),), B[count].unsqueeze(0), accumulate=True)
-            count = count + 1
-        '''
-
-        indexA = range(A.shape[0])
-        # uniq = torch.unique(index, sorted=True)
-        uniq = torch.unique(index, sorted=True).tolist()
-        if len(uniq) < A.shape[0]:
-            paddingindex = gpu(torch.LongTensor(list(set(indexA)-set(uniq))))
-            index = torch.cat((index, paddingindex))
-            paddingval = gpu(torch.zeros(1, B.shape[1]))
-            paddingval = paddingval.expand(paddingindex.shape[0], B.shape[1])
-            B = torch.cat((B, paddingval))
+        #A = A.clone()
+        
+        # C = D.clone()
+        # A.index_put_((index,), B, accumulate=True)
+        # indexD = range(A.shape[0])
+        # uniq = torch.unique(index, sorted=True).tolist()
+        # if len(uniq) < A.shape[0]:
+        #     paddingindex = gpu(torch.LongTensor(list(set(indexD)-set(uniq))))
+        #     index = torch.cat((index, paddingindex))
+        #     paddingval = gpu(torch.zeros(1, B.shape[1]))
+        #     paddingval = paddingval.expand(paddingindex.shape[0], B.shape[1])
+        #     B = torch.cat((B, paddingval))
             
-        C = A.clone()
-        D = A.clone()
-        C = C.index_put((index,), B)
-        A.index_put_((index,), B, accumulate=True)
+
+        # C = A.clone()
+        # C = C.index_put((index,), B)
+        # A.index_put_((index,), B, accumulate=True)
         # out = A.sub(C)
+        # return out
+        # A = A.index_put((index,), B, True)
+        # A = A.index_add((index,), B, True)
+        A[index] = A[index].add(B)
         return A
 
 def to_numpy(tensor):
@@ -77,6 +84,24 @@ def main():
     f = open("B.p0", 'rb')
     B = pickle.load(f)
     f.close()
+    # DD = A.clone()
+    # print(DD[27][0])
+    # for i,j in zip(index.tolist(),range(index.shape[0])):
+    #     if i == 27:
+    #         # print(B[j][0])
+    #         print("------",j)
+    # return 
+
+    newA = A.clone()
+    newB = B.clone()
+    newindex = index.clone()
+
+    A = A.index_add(0, index, B)
+    # for i in range(A.shape[0]):
+    #     if not A[i].equal(newA[i]):
+    #         print("----not equal ", i)
+    np.testing.assert_allclose(to_numpy(A), to_numpy(newA), rtol=1e-03, atol=1e-05)
+    return
     # A= gpu(torch.ones(5, 3))
     # dim = torch.zeros(1)
     # print(dim)
@@ -101,21 +126,44 @@ def main():
     # res = trained_model(index, A, B)
     # print(res)
     # return
+    # '''
+    D = A.clone()
+    D.index_put_((index,), B, accumulate=True)
+    print("beg export")
+    '''
     with torch.no_grad():
         torch.onnx.export(
                         trained_model,
                         input,
-                        "net_demo.onnx",
+                        "net_demo_test.onnx",
                         # operator_export_type=torch.onnx.OperatorExportTypes.ONNX_ATEN_FALLBACK,
                         opset_version=11)
-
+    print("end export")
+    return
+    '''
+    # if D.equal(A):
+    #     print("----------------- equal")
+    # return
     print('finish convert onnx')
-    ort_session = onnxruntime.InferenceSession("net_demo.onnx")
+    ort_session = onnxruntime.InferenceSession("net_demo_A.onnx")
     print(len(ort_session.get_inputs()))  # 3
     print('onnx input shape:',ort_session.get_inputs()[0].shape) #  [5]
     print('onnx input shape:',ort_session.get_inputs()[1].shape) #  [5,3]
     print('onnx input shape:',ort_session.get_inputs()[2].shape) #  [5,3]
 
+
+    f = open("A.p0", 'rb')
+    A = pickle.load(f)
+    f.close()
+    f = open("index.p0", 'rb')
+    index = pickle.load(f)
+    f.close()
+    f = open("B.p0", 'rb')
+    B = pickle.load(f)
+    f.close()
+    # A = D.clone()
+    # with torch.no_grad():
+    #     A.index_put_((index,), B, accumulate=True)
     ort_inputs = {ort_session.get_inputs()[0].name:index.cpu().detach().numpy(),ort_session.get_inputs()[1].name:A.cpu().detach().numpy(),ort_session.get_inputs()[2].name: B.cpu().detach().numpy()}
 
     ort_outs = ort_session.run(None, ort_inputs)
@@ -129,12 +177,6 @@ def main():
     f = open("B.p0", 'rb')
     newB = pickle.load(f)
     f.close()
-    if newindex.equal(index):
-        print("index equal")
-    if newA.equal(A):
-        print("A equal")
-    if newB.equal(B):
-        print("B equal")
 
     output = newA.index_put((newindex,), newB, accumulate=True)
 
