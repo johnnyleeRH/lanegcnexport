@@ -94,28 +94,70 @@ config["mgn"] = 0.2
 config["cls_th"] = 2.0
 config["cls_ignore"] = 0.2
 ### end of config ###
+def slicetensoradd(index, A, B):
+    indexid = gpu(torch.arange(0, index.shape[0], dtype=torch.int64))
+    C = gpu(torch.cat((index.unsqueeze(0).t(), indexid.unsqueeze(0).t()), dim=1))
+    D = gpu(torch.unique(C, dim=0))
+    uniqindex,count = torch.unique(index, return_counts=True)
+    indexcnt = torch.cat((uniqindex.unsqueeze(0).t(), count.unsqueeze(0).t()), dim=1)
+    # E = torch.tensor([],device='cuda:0', dtype=torch.int64)
+    E = gpu(torch.zeros((D[-1][0] + 1, 2), dtype=torch.int64))
+    # E = gpu(torch.zeros((D.shape[0], 2), dtype=torch.int64))
+    # print(E)
+    E[indexcnt[:, 0]] = E[indexcnt[:, 0]].add(indexcnt)
+    indexcnt1 = D[E[D[:, 0]][:,1]==1]
+    # indexcnt1 = torch.masked_select(D, E[D[:, 0]][:,1]==1)
+    # indexcnt1 = torch.index_select(D, dim=0, index=(E[D[:, 0]][:,1]==1))
 
-# def my_index_add(index, A, B):
-#     indexA = range(A.shape[0])
-#     # uniq = torch.unique(index, sorted=True)
-#     uniq = torch.unique(index, sorted=True).tolist()
-#     if len(uniq) < A.shape[0]:
-#         paddingindex = gpu(torch.LongTensor(list(set(indexA)-set(uniq))))
-#         index = torch.cat((index, paddingindex))
-#         paddingval = gpu(torch.zeros(1, B.shape[1]))
-#         paddingval = paddingval.expand(paddingindex.shape[0], B.shape[1])
-#         B = torch.cat((B, paddingval))
+    # A[indexcnt1[:,0]] = A[indexcnt1[:,0]].add(B[indexcnt1[:,1]])# Warning: ONNX Preprocess - Removing mutation on block inputs. This changes graph semantics.
+    newindex = indexcnt1[:,0]
+    newB = B[indexcnt1[:,1]]
+    A[newindex]
+    A = A.index_put((newindex,), newB, accumulate=True)
+    # return A
+    # A[indexcnt1[:,0]]
+    # A = A.index_put((index,), B, accumulate=True)
+    indexcnt2 = D[E[D[:, 0]][:,1]>1]
+    for i in indexcnt2: #RuntimeWarning: Iterating over a tensor might cause the trace to be incorrect
+        # A[i[0]] = A[i[0]].add(B[i[1]])
+        A = A.index_put((i[0],), B[i[1]], accumulate=True)
+    return A
+
+def savepickle(file, input):
+    f = open(file, 'wb')
+    pickle.dump(input, f, protocol=pickle.HIGHEST_PROTOCOL)
+    f.close()
+
+def my_index_add(index, A, B):
+    # A.index_add_(0, index, B)
+    # return A
+    # print(index.shape)
+    # print("haha--------------------------------------------------------")
+    # print("save index")
+    # savepickle("./index1.p0", index)
+    # print("save A")
+    # savepickle("./A1.p0", A)
+    # print("save B")
+    # savepickle("./B1.p0", B)
+    return slicetensoradd(index, A, B)
+    '''
+    indexA = range(A.shape[0])
+    # uniq = torch.unique(index, sorted=True)
+    uniq = torch.unique(index, sorted=True).tolist()
+    if len(uniq) < A.shape[0]:
+        paddingindex = gpu(torch.LongTensor(list(set(indexA)-set(uniq))))
+        index = torch.cat((index, paddingindex))
+        paddingval = gpu(torch.zeros(1, B.shape[1]))
+        paddingval = paddingval.expand(paddingindex.shape[0], B.shape[1])
+        B = torch.cat((B, paddingval))
         
-#     C = A.clone()
-#     C = C.index_put((index,), B)
-#     A = A.index_put_((index,), B, accumulate=True)
-#     out = A.sub(C)
-#     return out
+    C = A.clone()
+    C = C.index_put((index,), B)
+    A = A.index_put_((index,), B, accumulate=True)
+    out = A.sub(C)
+    return out
+    '''
 
-# def savepickle(file, input):
-#     f = open(file, 'wb')
-#     pickle.dump(input, f, protocol=pickle.HIGHEST_PROTOCOL)
-#     f.close()
 
 # def my_index_add(index, A, B):
 #     # savepickle("./index.p0", index)
@@ -503,7 +545,7 @@ class MapNet(nn.Module):
                             k2 = int(key[3:])
                             a_tmp = self.get_fuse_res(feat[pre[k2 * 2 + 1]], key, i)
                             # tempbase = temp
-                            # '''
+                            '''
                             temp.index_add_(
                                 0,
                                 # temp,
@@ -512,9 +554,9 @@ class MapNet(nn.Module):
                                 # ctr(feat[graph[get_index(k1)][get_index(k2)][get_index("v")]]),
                                 a_tmp,
                             )
-                            # '''
+                            '''
                             # temp = temp.index_put((pre[k2 * 2],), a_tmp, True)
-                            # temp = my_index_add(pre[k2 * 2], temp, a_tmp)
+                            temp = my_index_add(pre[k2 * 2], temp, a_tmp)
                             # return temp, idcs, ctrs
                             # if not tempbase.equal(temp):
                             #     print("lrh not equal temp vs tempbase found")
@@ -523,8 +565,8 @@ class MapNet(nn.Module):
                             k2 = int(key[3:])
                             a_tmp = self.get_fuse_res(feat[suc[k2 * 2 + 1]], key, i)
                             # lrhtest = temp.clone()
-                            temp.index_add_(0, suc[k2 * 2], a_tmp)
-                            # temp = my_index_add(suc[k2 * 2], temp, a_tmp)
+                            # temp.index_add_(0, suc[k2 * 2], a_tmp)
+                            temp = my_index_add(suc[k2 * 2], temp, a_tmp)
                             # A.index_put_((index,), B, accumulate=True)
                             # temp = temp.index_put(tuple(suc[k2 * 2].t()), a_tmp, True)
                             # temp = temp.index_put((suc[k2 * 2],), a_tmp, True)
@@ -539,27 +581,27 @@ class MapNet(nn.Module):
 
                     if len(left[0] > 0):
                         tmp2 = self.get_fuse_res(feat[left[1]], 'left', i)
-                        # '''
+                        '''
                         temp.index_add_(
                             0,
                             left[0],
                             # graph[get_graph_index("left")][get_graph_index("u")],
                             tmp2,
                         )
-                        # '''
-                        # temp = my_index_add(left[0], temp, tmp2)
+                        '''
+                        temp = my_index_add(left[0], temp, tmp2)
                         
                     if len(right[0] > 0):
                         tmp3 = self.get_fuse_res(feat[right[1]], 'right', i)
-                        # '''
+                        '''
                         temp.index_add_(
                             0,
                             right[0],
                             # graph[get_graph_index("right")][get_graph_index("u")],
                             tmp3,
                         )
-                        # '''
-                        # temp = my_index_add(right[0], temp, tmp3)
+                        '''
+                        temp = my_index_add(right[0], temp, tmp3)
                         
                     # lrhtest = temp.clone()
                     # my_index_add(right[0], temp, tmp3)
@@ -684,7 +726,7 @@ class M2M(nn.Module):
                             k1 = key[:3]
                             k2 = int(key[3:])
                             tmp = self.get_fuse_res(key, i, feat[pre[k2 * 2 + 1]])
-                            # '''
+                            '''
                             temp.index_add_(
                                 0,
                                 pre[k2 * 2],
@@ -692,13 +734,13 @@ class M2M(nn.Module):
                                 # self.fuse[key][i](feat[graph[k1][k2]["v"]]),
                                 tmp,
                             )
-                            # '''
-                            # temp = my_index_add(pre[k2 * 2], temp, tmp)
+                            '''
+                            temp = my_index_add(pre[k2 * 2], temp, tmp)
                         if key.startswith("suc"):
                             k1 = key[:3]
                             k2 = int(key[3:])
                             tmp = self.get_fuse_res(key, i, feat[suc[k2 * 2 + 1]])
-                            # '''
+                            '''
                             temp.index_add_(
                                 0,
                                 suc[k2 * 2],
@@ -706,13 +748,13 @@ class M2M(nn.Module):
                                 # self.fuse[key][i](feat[graph[k1][k2]["v"]]),
                                 tmp,
                             )
-                            # '''
-                            # temp = my_index_add(suc[k2 * 2], temp, tmp)
+                            '''
+                            temp = my_index_add(suc[k2 * 2], temp, tmp)
                             
 
                     if len(left[0] > 0):
                         tmp = self.get_fuse_res('left', i, feat[left[1]])
-                        # '''
+                        '''
                         temp.index_add_(
                             0,
                             left[0],
@@ -720,12 +762,12 @@ class M2M(nn.Module):
                             # self.fuse["left"][i](feat[graph["left"]["v"]]),
                             tmp,
                         )
-                        # '''
-                        # temp = my_index_add(left[0], temp, tmp)
+                        '''
+                        temp = my_index_add(left[0], temp, tmp)
                         
                     if len(right[0] > 0):
                         tmp = self.get_fuse_res('right', i, feat[right[1]])
-                        # '''
+                        '''
                         temp.index_add_(
                             0,
                             right[0],
@@ -733,8 +775,8 @@ class M2M(nn.Module):
                             # self.fuse["right"][i](feat[graph["right"]["v"]]),
                             tmp,
                         )
-                        # '''
-                        # temp = my_index_add(right[0], temp, tmp)
+                        '''
+                        temp = my_index_add(right[0], temp, tmp)
                         
 
                     # feat = self.fuse["norm"][i](temp)
@@ -991,8 +1033,8 @@ class Att(nn.Module):
 
         agts = self.agt(agts)
         # agtstest = agts.clone()
-        agts.index_add_(0, hi, ctx)
-        # agts = my_index_add(hi, agts, ctx)
+        # agts.index_add_(0, hi, ctx)
+        agts = my_index_add(hi, agts, ctx)
         # for i in range(agts.shape[0]):
         #     if not agts[i].equal(agtstest[i]):
         #         print("************************ not equal,", i)

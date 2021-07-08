@@ -264,13 +264,13 @@ def main():
             #     input_names=['feats', 'ctrs', 'rot', 'orig',
             #     'graph_idcs', 'graph_ctrs', 'graph_feats', 'graph_turn',
             #     'graph_control', 'graph_intersect', 'graph_pre', 'graph_suc', 'graph_left', 'graph_right'])
-            print("after export")
+            # print("after export")
             # print(f'second run take {time.time() - ts1}')
             # scp_mod.save('37.pt')
             # ort_session = onnxruntime.InferenceSession("test.onnx")
 
             # compute ONNX Runtime output prediction
-            print('--------------------------------------------------------')
+            # print('--------------------------------------------------------')
             # print(len(ort_session.get_inputs()))
             # for i in range(0, len(ort_session.get_inputs())):
             #     print(ort_session.get_inputs()[i])

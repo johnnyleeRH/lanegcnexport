@@ -264,15 +264,15 @@ def main():
                 
             ort_session = onnxruntime.InferenceSession("test.onnx")
 
-            # input1 = torch.cat(data['feats'],0)
-            # input2 = torch.cat(data['ctrs'],0)
-            # input4 = torch.cat(data['rot'],0)
-            # input5 = torch.cat(data['orig'],0)
+            input1 = torch.cat(data['feats'],0)
+            input2 = torch.cat(data['ctrs'],0)
+            input4 = torch.cat(data['rot'],0)
+            input5 = torch.cat(data['orig'],0)
             input3_2 =  torch.cat(data['graph'][1],0).clone()#data['graph'][1][0]
             input3_3 =  torch.cat(data['graph'][2],0).clone()#data['graph'][2][0]
-            # input3_4 =  data['graph'][3][0]
-            # input3_5 =  data['graph'][4][0]
-            # input3_6 =  data['graph'][5][0]
+            input3_4 =  data['graph'][3][0]
+            input3_5 =  data['graph'][4][0]
+            input3_6 =  data['graph'][5][0]
             input3_7 =  data['graph'][6][0].clone()
             input3_8 =  data['graph'][6][1].clone()
             input3_9 =  data['graph'][6][2]
@@ -307,43 +307,43 @@ def main():
 
             # ort_inputs = {ort_session.get_inputs()[0].name: input1.cpu().numpy(),ort_session.get_inputs()[1].name: input2.cpu().numpy(),ort_session.get_inputs()[2].name: input4.cpu().numpy(),ort_session.get_inputs()[3].name: input5.cpu().numpy(),ort_session.get_inputs()[4].name: input3_2.cpu().numpy(),ort_session.get_inputs()[5].name: input3_3.cpu().numpy(),ort_session.get_inputs()[6].name: input3_4.cpu().numpy(),ort_session.get_inputs()[7].name: input3_5.cpu().numpy(),ort_session.get_inputs()[8].name: input3_6.cpu().numpy(),ort_session.get_inputs()[9].name: input3_7.cpu().numpy(),ort_session.get_inputs()[10].name: input3_8.cpu().numpy(),ort_session.get_inputs()[11].name: input3_9.cpu().numpy(),ort_session.get_inputs()[12].name: input3_10.cpu().numpy(),ort_session.get_inputs()[13].name: input3_11.cpu().numpy(),ort_session.get_inputs()[14].name: input3_12.cpu().numpy(),ort_session.get_inputs()[15].name: input3_13.cpu().numpy(),ort_session.get_inputs()[16].name: input3_14.cpu().numpy(),ort_session.get_inputs()[17].name: input3_15.cpu().numpy(),ort_session.get_inputs()[18].name: input3_16.cpu().numpy(),ort_session.get_inputs()[19].name: input3_17.cpu().numpy(),ort_session.get_inputs()[20].name: input3_18.cpu().numpy(),ort_session.get_inputs()[21].name: input3_19.cpu().numpy(),ort_session.get_inputs()[22].name: input3_20.cpu().numpy(),ort_session.get_inputs()[23].name: input3_21.cpu().numpy(),ort_session.get_inputs()[24].name: input3_22.cpu().numpy(),ort_session.get_inputs()[25].name: input3_23.cpu().numpy(),ort_session.get_inputs()[26].name: input3_24.cpu().numpy(),ort_session.get_inputs()[27].name: input3_25.cpu().numpy(),ort_session.get_inputs()[28].name: input3_26.cpu().numpy(),ort_session.get_inputs()[29].name: input3_27.cpu().numpy(),ort_session.get_inputs()[30].name: input3_28.cpu().numpy(),ort_session.get_inputs()[31].name: input3_29.cpu().numpy(),ort_session.get_inputs()[32].name: input3_30.cpu().numpy(),ort_session.get_inputs()[33].name: input3_31.cpu().numpy(),ort_session.get_inputs()[34].name: input3_32.cpu().numpy(),ort_session.get_inputs()[35].name: input3_33.cpu().numpy(),ort_session.get_inputs()[36].name: input3_34.cpu().numpy()}
             ort_inputs = {
-                        # ort_session.get_inputs()[0].name: input1.cpu().numpy(),
-                        # ort_session.get_inputs()[1].name: input2.cpu().numpy(),
-                        # ort_session.get_inputs()[2].name: input4.cpu().numpy(),
-                        # ort_session.get_inputs()[3].name: input5.cpu().numpy(),
-                        ort_session.get_inputs()[0].name: input3_2.cpu().numpy(),
-                        ort_session.get_inputs()[1].name: input3_3.cpu().numpy(),
-                        # ort_session.get_inputs()[6].name: input3_4.cpu().numpy(),
-                        # ort_session.get_inputs()[7].name: input3_5.cpu().numpy(),
-                        # ort_session.get_inputs()[8].name: input3_6.cpu().numpy(),
-                        ort_session.get_inputs()[2].name: input3_7.cpu().numpy(),
-                        ort_session.get_inputs()[3].name: input3_8.cpu().numpy(),
-                        # ort_session.get_inputs()[4].name: input3_9.cpu().numpy(),
-                        # ort_session.get_inputs()[5].name: input3_10.cpu().numpy(),
-                        # ort_session.get_inputs()[6].name: input3_11.cpu().numpy(),
-                        # ort_session.get_inputs()[7].name: input3_12.cpu().numpy(),
-                        # ort_session.get_inputs()[8].name: input3_13.cpu().numpy(),
-                        # ort_session.get_inputs()[9].name: input3_14.cpu().numpy(),
-                        # ort_session.get_inputs()[10].name: input3_15.cpu().numpy(),
-                        # ort_session.get_inputs()[11].name: input3_16.cpu().numpy(),
-                        # ort_session.get_inputs()[12].name: input3_17.cpu().numpy(),
-                        # ort_session.get_inputs()[13].name: input3_18.cpu().numpy(),
-                        # ort_session.get_inputs()[14].name: input3_19.cpu().numpy(),
-                        # ort_session.get_inputs()[15].name: input3_20.cpu().numpy(),
-                        # ort_session.get_inputs()[16].name: input3_21.cpu().numpy(),
-                        # ort_session.get_inputs()[17].name: input3_22.cpu().numpy(),
-                        # ort_session.get_inputs()[18].name: input3_23.cpu().numpy(),
-                        # ort_session.get_inputs()[19].name: input3_24.cpu().numpy(),
-                        # ort_session.get_inputs()[20].name: input3_25.cpu().numpy(),
-                        # ort_session.get_inputs()[21].name: input3_26.cpu().numpy(),
-                        # ort_session.get_inputs()[22].name: input3_27.cpu().numpy(),
-                        # ort_session.get_inputs()[23].name: input3_28.cpu().numpy(),
-                        # ort_session.get_inputs()[24].name: input3_29.cpu().numpy(),
-                        # ort_session.get_inputs()[25].name: input3_30.cpu().numpy(),
-                        # ort_session.get_inputs()[26].name: input3_31.cpu().numpy(),
-                        # ort_session.get_inputs()[27].name: input3_32.cpu().numpy(),
-                        # ort_session.get_inputs()[28].name: input3_33.cpu().numpy(),
-                        # ort_session.get_inputs()[29].name: input3_34.cpu().numpy()
+                        ort_session.get_inputs()[0].name: input1.cpu().numpy(),
+                        ort_session.get_inputs()[1].name: input2.cpu().numpy(),
+                        ort_session.get_inputs()[2].name: input4.cpu().numpy(),
+                        ort_session.get_inputs()[3].name: input5.cpu().numpy(),
+                        ort_session.get_inputs()[4].name: input3_2.cpu().numpy(),
+                        ort_session.get_inputs()[5].name: input3_3.cpu().numpy(),
+                        ort_session.get_inputs()[6].name: input3_4.cpu().numpy(),
+                        ort_session.get_inputs()[7].name: input3_5.cpu().numpy(),
+                        ort_session.get_inputs()[8].name: input3_6.cpu().numpy(),
+                        ort_session.get_inputs()[9].name: input3_7.cpu().numpy(),
+                        ort_session.get_inputs()[10].name: input3_8.cpu().numpy(),
+                        ort_session.get_inputs()[11].name: input3_9.cpu().numpy(),
+                        ort_session.get_inputs()[12].name: input3_10.cpu().numpy(),
+                        ort_session.get_inputs()[13].name: input3_11.cpu().numpy(),
+                        ort_session.get_inputs()[14].name: input3_12.cpu().numpy(),
+                        ort_session.get_inputs()[15].name: input3_13.cpu().numpy(),
+                        ort_session.get_inputs()[16].name: input3_14.cpu().numpy(),
+                        ort_session.get_inputs()[17].name: input3_15.cpu().numpy(),
+                        ort_session.get_inputs()[18].name: input3_16.cpu().numpy(),
+                        ort_session.get_inputs()[19].name: input3_17.cpu().numpy(),
+                        ort_session.get_inputs()[20].name: input3_18.cpu().numpy(),
+                        ort_session.get_inputs()[21].name: input3_19.cpu().numpy(),
+                        ort_session.get_inputs()[22].name: input3_20.cpu().numpy(),
+                        ort_session.get_inputs()[23].name: input3_21.cpu().numpy(),
+                        ort_session.get_inputs()[24].name: input3_22.cpu().numpy(),
+                        ort_session.get_inputs()[25].name: input3_23.cpu().numpy(),
+                        ort_session.get_inputs()[26].name: input3_24.cpu().numpy(),
+                        ort_session.get_inputs()[27].name: input3_25.cpu().numpy(),
+                        ort_session.get_inputs()[28].name: input3_26.cpu().numpy(),
+                        ort_session.get_inputs()[29].name: input3_27.cpu().numpy(),
+                        ort_session.get_inputs()[30].name: input3_28.cpu().numpy(),
+                        ort_session.get_inputs()[31].name: input3_29.cpu().numpy(),
+                        ort_session.get_inputs()[32].name: input3_30.cpu().numpy(),
+                        ort_session.get_inputs()[33].name: input3_31.cpu().numpy(),
+                        ort_session.get_inputs()[34].name: input3_32.cpu().numpy(),
+                        ort_session.get_inputs()[35].name: input3_33.cpu().numpy(),
+                        ort_session.get_inputs()[36].name: input3_34.cpu().numpy()
                         }
             ort_outs = ort_session.run(None, ort_inputs)
 
@@ -354,17 +354,17 @@ def main():
             # results = ort_outs[1]
             # ort_outs_0 = torch.from_numpy(ort_outs[0])
             # ort_outs_1 = torch.from_numpy(ort_outs[1])
-            # results = [torch.from_numpy(ort_outs[1])]
+            results = [torch.from_numpy(ort_outs[1])]
             # output = output
             # print(output.shape)
             # for i in range(output[0].shape[0]):
             #     print("lrh", i)
-            output = net(new_data)
-            print(output[0])
-            print("------------------")
-            print(ort_outs[0][0])
-            np.testing.assert_allclose(to_numpy(output[0]), ort_outs[0][0], rtol=1e-03, atol=1e-05)
-            return
+            # output = net(new_data)
+            # print(output[0])
+            # print("------------------")
+            # print(ort_outs[0][0])
+            # np.testing.assert_allclose(to_numpy(output[0]), ort_outs[0][0], rtol=1e-03, atol=1e-05)
+            # return
             # if i == 116:
             #     print(output[116])
             #     print(ort_outs[0][116])
