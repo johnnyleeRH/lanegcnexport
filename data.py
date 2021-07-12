@@ -142,6 +142,7 @@ class ArgoDataset(Dataset):
         data['city'] = city
         data['trajs'] = [agt_traj] + ctx_trajs
         data['steps'] = [agt_step] + ctx_steps
+        data['srcname'] = self.avl[idx].current_seq.name
         return data
     
     def get_obj_feats(self, data):
@@ -410,7 +411,7 @@ class ArgoTestDataset(ArgoDataset):
                 data = new_data
             else:
                 new_data = dict()
-                for key in ['orig', 'gt_preds', 'has_preds', 'theta', 'rot', 'feats', 'ctrs', 'graph','argo_id','city']:
+                for key in ['orig', 'gt_preds', 'has_preds', 'theta', 'rot', 'feats', 'ctrs', 'graph','argo_id','city', 'srcname']:
                     if key in data:
                         new_data[key] = ref_copy(data[key])
                 data = new_data

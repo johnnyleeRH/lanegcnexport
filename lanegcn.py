@@ -129,8 +129,8 @@ def savepickle(file, input):
     f.close()
 
 def my_index_add(index, A, B):
-    # A.index_add_(0, index, B)
-    # return A
+    A.index_add_(0, index, B)
+    return A
     # print(index.shape)
     # print("haha--------------------------------------------------------")
     # print("save index")
@@ -139,7 +139,7 @@ def my_index_add(index, A, B):
     # savepickle("./A1.p0", A)
     # print("save B")
     # savepickle("./B1.p0", B)
-    return slicetensoradd(index, A, B)
+    # return slicetensoradd(index, A, B)
     '''
     indexA = range(A.shape[0])
     # uniq = torch.unique(index, sorted=True)
@@ -240,6 +240,7 @@ class Net(nn.Module):
         # print('*' * 80)
         # print(actors)
         actors = self.actor_net(actors)
+        '''
         # return actors
 
         # print(actors)
@@ -279,6 +280,7 @@ class Net(nn.Module):
 
         # prediction
         # return actors
+        '''
         out = self.pred_net(actors, actor_idcs, actor_ctrs)
         # return out ==> feats ctrs
         

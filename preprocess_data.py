@@ -35,6 +35,13 @@ parser.add_argument(
     "-m", "--model", default="lanegcn", type=str, metavar="MODEL", help="model name"
 )
 
+parser.add_argument(
+    "--split", type=str, default="val", help='data split, "val" or "test"'
+)
+parser.add_argument(
+    "--weight", default="", type=str, metavar="WEIGHT", help="checkpoint path"
+)
+
 
 def main():
     # Import all settings for experiment.
@@ -175,7 +182,7 @@ def test(config):
         collate_fn=collate_fn,
         pin_memory=True,
     )
-    stores = [None for x in range(1)]
+    stores = [None for x in range(10)]
 
     t = time.time()
     for i, data in enumerate(tqdm(test_loader)):
@@ -191,6 +198,7 @@ def test(config):
                 "theta",
                 "rot",
                 "graph",
+                "srcname",
             ]:
                 store[key] = to_numpy(data[key][j])
                 if key in ["graph"]:
@@ -200,7 +208,6 @@ def test(config):
         if (i + 1) % 100 == 0:
             print(i, time.time() - t)
             t = time.time()
-
     dataset = PreprocessDataset(stores, config, train=False)
     data_loader = DataLoader(
         dataset,
@@ -257,8 +264,8 @@ def modify(config, data_loader, save):
         if (i + 1) % 100 == 0:
             print((i + 1) * config['batch_size'], time.time() - t)
             t = time.time()
-
     f = open(os.path.join(root_path, 'preprocess', save), 'wb')
+    # keys: dict_keys(['idx', 'city', 'feats', 'ctrs', 'orig', 'theta', 'rot', 'graph'])
     pickle.dump(store, f, protocol=pickle.HIGHEST_PROTOCOL)
     f.close()
 
