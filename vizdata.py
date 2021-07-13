@@ -141,4 +141,6 @@ def viz_predictions(
     plt.yticks([])
     handles, labels = plt.gca().get_legend_handles_labels()
     by_label = OrderedDict(zip(labels, handles))
-    plt.show()
+    plt.show(block=False)
+    plt.pause(2)
+    plt.close()
